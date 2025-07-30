@@ -13,7 +13,11 @@ import Footer from "./components/Footer";
 import PhaseOne from "./pages/PhaseOne";
 import PhaseTwo from "./pages/PhaseTwo";
 import PhaseThree from "./pages/PhaseThree";
+import Login from "./components/Auth/Login";
+import Dashboard from "./components/Dashboard/Overview";
+import Portfolio from "./components/Dashboard/Portfolio";
 import Ajebo from "./pages/Ajebo";
+import Overview from "./components/Dashboard/Overview";
 /* Import inspiration from NIVAFER and VERITASI homes*/
 export default function App() {
   return (
@@ -32,6 +36,10 @@ export default function App() {
           <Route path="/phase2" element={<PhaseTwo />} />
           <Route path="/phase3" element={<PhaseThree />} />
           <Route path="/ajebo" element={<Ajebo />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/dashboard" element={<Overview />} />
+          <Route path="/dashboard/portfolio" element={<Portfolio />} />
+          {/* Add more routes as needed */}
         </Routes>
       </main>
       <Footer />
