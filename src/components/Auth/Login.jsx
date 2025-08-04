@@ -29,7 +29,7 @@ function Login() {
         <h2 className="text-2xl font-bold mb-4 text-center text-orange-600">
           Investor Login
         </h2>
-        <form>
+        <form onSubmit={handleLogin}>
           <input
             type="text"
             placeholder="Username"
