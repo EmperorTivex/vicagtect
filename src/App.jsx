@@ -4,6 +4,7 @@ import reactLogo from "./assets/react.svg";
 import "./App.css";
 import Navbar from "./components/Navbar";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import About from "./pages/About";
 import Home from "./pages/Home";
 import Estates from "./pages/Estates";
@@ -20,6 +21,7 @@ import Ajebo from "./pages/Ajebo";
 import Overview from "./components/Dashboard/Overview";
 /* Import inspiration from NIVAFER and VERITASI homes*/
 export default function App() {
+  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
   return (
     <Router>
       <Navbar />
@@ -37,7 +39,10 @@ export default function App() {
           <Route path="/phase3" element={<PhaseThree />} />
           <Route path="/ajebo" element={<Ajebo />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Overview />} />
+          <Route
+            path="/dashboard"
+            element={isLoggedIn ? <Overview /> : <Navigate to="/login" />}
+          />
           <Route path="/dashboard/portfolio" element={<Portfolio />} />
           {/* Add more routes as needed */}
         </Routes>

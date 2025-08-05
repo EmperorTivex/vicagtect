@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 function Topbar() {
   const navigate = useNavigate();
   const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn");
     navigate("/login");
   };
   return (
