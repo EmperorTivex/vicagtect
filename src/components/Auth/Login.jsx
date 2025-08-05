@@ -17,7 +17,7 @@ function Login() {
     e.preventDefault();
 
     if (username === dummyUser.username && password === dummyUser.password) {
-      localStorage.setItem("isLoggedIn", true);
+      localStorage.setItem("isLoggedIn", "true");
       setError("");
       navigate("/dashboard");
     } else {
