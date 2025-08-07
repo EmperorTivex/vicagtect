@@ -1,6 +1,8 @@
 import React from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { db } from "../../firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -8,20 +10,27 @@ function Login() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const dummyUser = {
-    username: "Tise",
-    password: "emperor",
-  };
-
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    if (username === dummyUser.username && password === dummyUser.password) {
-      localStorage.setItem("isLoggedIn", "true");
-      setError("");
-      navigate("/dashboard");
-    } else {
-      setError("Invalid credentials");
+    try {
+      const q = query(
+        collection(db, "logins"),
+        where("username", "==", username),
+        where("password", "==", password)
+      );
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("investorName", username);
+        setError("");
+        navigate("/dashboard");
+      } else {
+        setError("Invalid credentials");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("An error occured during login.");
     }
   };
   return (

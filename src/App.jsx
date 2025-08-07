@@ -19,6 +19,8 @@ import Dashboard from "./components/Dashboard/Overview";
 import Portfolio from "./components/Dashboard/Portfolio";
 import Ajebo from "./pages/Ajebo";
 import Overview from "./components/Dashboard/Overview";
+import AdminPanel from "./pages/AdminPanel";
+import AddUser from "./pages/AddUser";
 /* Import inspiration from NIVAFER and VERITASI homes*/
 export default function App() {
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
@@ -44,6 +46,7 @@ export default function App() {
             element={isLoggedIn ? <Overview /> : <Navigate to="/login" />}
           />
           <Route path="/dashboard/portfolio" element={<Portfolio />} />
+          <Route path="/admin-panel" element={<AdminPanel />} />
           {/* Add more routes as needed */}
         </Routes>
       </main>
