@@ -47,6 +47,7 @@ export default function App() {
           />
           <Route path="/dashboard/portfolio" element={<Portfolio />} />
           <Route path="/admin-panel" element={<AdminPanel />} />
+          <Route path="/add-user" element={<AddUser />} />
           {/* Add more routes as needed */}
         </Routes>
       </main>
