@@ -45,25 +45,31 @@ function Overview() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex flex-col md:flex-row h-screen bg-gray-100">
       <Sidebar />
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-4 sm:p-6">
         <Topbar />
-        <main className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
-          <h1 className="text-3xl font-bold mb-4">Welcome, {investor.name}</h1>
-          <div className="grid grid-cols-2 gap-6">
-            <div className="bg-gray-200 p-6 rounded shadow-md ">
-              <h2 className="text-lg font-bold mb-2">Total Amount Invested</h2>
-              <p className="text-2xl font-bold text-grayn-800">
+        <main className="w-full max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-center sm:text-left">
+            Welcome, {investor.name}
+          </h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <div className="bg-gray-200 p-4 sm:p-6rounded shadow-md ">
+              <h2 className="text-base sm:text-lg font-bold mb-2">
+                Total Amount Invested
+              </h2>
+              <p className="text-xl sm:text-2xl font-bold text-gray-800">
                 {investor.amount}
               </p>
             </div>
-            <div className="bg-gray-200 rounded-lg shadow-md">
-              <h2 className="text-lg font-bold  mb-2">Investment Status</h2>
-              <p className="text-lg text-blue-700 font-medium">
+            <div className="bg-gray-200 p-4 sm:p-6 rounded-lg shadow-md">
+              <h2 className="text-base sm:text-lg font-bold mb-2">
+                Investment Status
+              </h2>
+              <p className="text-base sm:text-lg text-blue-700 font-medium">
                 {investor.status}
               </p>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">
                 {" "}
                 Last updated:
                 {new Date(investor.date.seconds * 1000).toDateString()}

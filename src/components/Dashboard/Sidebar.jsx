@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 function Sidebar() {
   return (
-    <div className="bg-white shadow h-screen w-64 p-5">
+    <div className="hidden md:block bg-white shadow h-screen w-64 p-5">
       <h2 className="text-xl font-bold text-orange-600 mb-6">Vicagtect</h2>
       <ul className="space-y-4">
         <li>

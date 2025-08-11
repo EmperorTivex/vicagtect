@@ -19,11 +19,16 @@ import Dashboard from "./components/Dashboard/Overview";
 import Portfolio from "./components/Dashboard/Portfolio";
 import Ajebo from "./pages/Ajebo";
 import Overview from "./components/Dashboard/Overview";
-import AdminPanel from "./pages/AdminPanel";
-import AddUser from "./pages/AddUser";
+import AdminPanel from "./pages/admin/AdminPanel";
+import AddUser from "./pages/admin/AddUser";
+import AdminLogin from "./pages/admin/AdminLogin";
 /* Import inspiration from NIVAFER and VERITASI homes*/
 export default function App() {
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const AdminRoute = ({ children }) => {
+    const isLoggedIn = localStorage.getItem("isAdminLoggedIn");
+    return isLoggedIn ? children : <Navigate to="/admin-login" />;
+  };
   return (
     <Router>
       <Navbar />
@@ -46,8 +51,23 @@ export default function App() {
             element={isLoggedIn ? <Overview /> : <Navigate to="/login" />}
           />
           <Route path="/dashboard/portfolio" element={<Portfolio />} />
-          <Route path="/admin-panel" element={<AdminPanel />} />
-          <Route path="/add-user" element={<AddUser />} />
+          <Route path="admin-login" element={<AdminLogin />} />
+          <Route
+            path="/admin-panel"
+            element={
+              <AdminRoute>
+                <AdminPanel />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/add-user"
+            element={
+              <AdminRoute>
+                <AddUser />
+              </AdminRoute>
+            }
+          />
           {/* Add more routes as needed */}
         </Routes>
       </main>
