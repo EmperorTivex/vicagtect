@@ -2,12 +2,21 @@ import React from "react";
 import { useState } from "react";
 import { db } from "../../firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 function AdminPanel() {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [status, setStatus] = useState("Active");
   const [message, setMessage] = useState("");
+  useEffect(() => {
+    const isAdminLoggedIn = localStorage.getItem("isAdminLoggedIn");
+    if (isAdminLoggedIn !== "true") {
+      navigate("/admin-login");
+    }
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

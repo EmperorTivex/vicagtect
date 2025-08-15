@@ -26,7 +26,7 @@ import AdminLogin from "./pages/admin/AdminLogin";
 export default function App() {
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
   const AdminRoute = ({ children }) => {
-    const isLoggedIn = localStorage.getItem("isAdminLoggedIn");
+    const isLoggedIn = localStorage.getItem("isAdminLoggedIn") === "true";
     return isLoggedIn ? children : <Navigate to="/admin-login" />;
   };
   return (
