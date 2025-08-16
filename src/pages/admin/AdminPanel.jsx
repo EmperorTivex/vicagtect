@@ -17,6 +17,10 @@ function AdminPanel() {
       navigate("/admin-login");
     }
   }, [navigate]);
+  const handleLogout = () => {
+    localStorage.removeItem("isAdminLoggedIn");
+    navigate("/admin-login");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,14 +45,23 @@ function AdminPanel() {
     }
   };
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="bg-white shadow-md rounded-lg p-8 w-full max-w-lg">
-        <h2 className="text-2xl font-bold mb-6 text-orange-600">Admin Panel</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-2 sm:px-4">
+      <button
+        onClick={handleLogout}
+        className="absolute top-4 right-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
+        aria-label="Logout"
+      >
+        Logout
+      </button>
+      <div className="bg-white shadow-md rounded-lg p-4 sm:p-8 w-full max-w-md sm:max-w-lg">
+        <h2 className="text-2xl font-bold mb-6 text-orange-600 text-center">
+          Admin Panel
+        </h2>
         <form onSubmit={handleSubmit}>
           <input
             type="text"
             placeholder="Investor Name"
-            className="w-full mb-4 px-4 py-2 border rounded"
+            className="w-full mb-4 px-4 py-2 border rounded focus:outline-none"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />

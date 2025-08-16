@@ -23,12 +23,13 @@ import AdminPanel from "./pages/admin/AdminPanel";
 import AddUser from "./pages/admin/AddUser";
 import AdminLogin from "./pages/admin/AdminLogin";
 /* Import inspiration from NIVAFER and VERITASI homes*/
+const AdminRoute = ({ children }) => {
+  const isLoggedIn = localStorage.getItem("isAdminLoggedIn") === "true";
+  return isLoggedIn ? children : <Navigate to="/admin-login" />;
+};
 export default function App() {
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-  const AdminRoute = ({ children }) => {
-    const isLoggedIn = localStorage.getItem("isAdminLoggedIn") === "true";
-    return isLoggedIn ? children : <Navigate to="/admin-login" />;
-  };
+
   return (
     <Router>
       <Navbar />
@@ -51,7 +52,7 @@ export default function App() {
             element={isLoggedIn ? <Overview /> : <Navigate to="/login" />}
           />
           <Route path="/dashboard/portfolio" element={<Portfolio />} />
-          <Route path="admin-login" element={<AdminLogin />} />
+          <Route path="/admin-login" element={<AdminLogin />} />
           <Route
             path="/admin-panel"
             element={
