@@ -4,7 +4,7 @@ const DrawBuild = () => {
   return (
     <div className="px-4 py-12 bg-white text-gray-800">
       <h1 className="text-4xl font-bold text-orange-600 text-center mb-6">
-        Draw & Build services
+        Design & Build services
       </h1>
       <p className="text-center max-w-3xl mx-auto text-lg mb-10">
         We provide end-to-end design and construction solutions. From

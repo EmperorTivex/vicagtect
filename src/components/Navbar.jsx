@@ -67,7 +67,7 @@ export default function Navbar() {
             className="hover:text-orange-500 block py-2 sm:py-0"
           >
             {" "}
-            Draw & Build
+            Design & Build
           </Link>
         </li>
         <li>

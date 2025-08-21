@@ -41,7 +41,7 @@ function Constructionsection() {
         >
           <p className="mb-4 text-gray-700 text-base md:text-lg">
             From detailed architectural drawings to structural design and full
-            building execution, Vicagtect provides a comprehensive 'Draw and
+            building execution, Vicagtect provides a comprehensive 'Design and
             Build ' service tailored to your needs.
           </p>
           <ul className="list-disc list-inside space-y-2 text-gray-600 text-sm md:text-base">

@@ -31,7 +31,7 @@ function Footer() {
             <li>
               <a href="/draw-and-build" className="hover:text-orange-600">
                 {" "}
-                Draw & Build
+                Design & Build
               </a>
             </li>
             <li>
