@@ -1,4 +1,9 @@
 import React from "react";
+import struct from "../assets/structeng.jpg";
+import sup from "../assets/constsupervise.jpg";
+import arc from "../assets/arcdesigns.jpg";
+import build from "../assets/buildconst.jpg";
+import rend from "../assets/3Drend.jpg";
 
 const DrawBuild = () => {
   return (
@@ -12,17 +17,80 @@ const DrawBuild = () => {
         vision to life with honesty and proffessionalism.
       </p>
       <section className="mb-12">
-        <h2 className="text-2xl font-semibold mb-4 text-orange-500">
+        <h2 className="text-3xl font-semibold mb-4 font-bold text-orange-500 mb-6 text-center">
           {" "}
           What We offer
         </h2>
-        <ul className="space-y-4 list-disc pl-6">
-          <li>Architectural Designs</li>
-          <li>Structural Engineering Plans</li>
-          <li>Building Construction</li>
-          <li>Construction Supervision</li>
-          <li>3D Rendering and Visualization</li>
-        </ul>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="bg-white rounded-xl shadow-lg p-4 flex flex-col items-center hover:scale-105 transition">
+            <img
+              src={arc}
+              alt="Architectural Designs"
+              className="w-32 h-32 object-cover rounded-lg mb-4"
+            />
+            <h3 className="text-lg font-bold text-orange-600 mb-2">
+              Architectural Designs
+            </h3>
+            <p className="text-gray-700 text-center">
+              Creative, functional plans tailored to your vision and lifestyle
+            </p>
+          </div>
+          <div className="bg-white rounded-xl shadow-lg p-4 flex flex-col items-center hover:scale-105 transition">
+            <img
+              src={struct}
+              alt="Structural Engineering"
+              className="w-32 h-32 object-cover rounded-lg mb-4"
+            />
+            <h3 className="text-lg font-bold text-orange-600 mb-2">
+              Stuctural Engineering
+            </h3>
+            <p className="text-gray-700 text-center">
+              {" "}
+              Expert design and analysis for safe, reliable buildings.
+            </p>
+          </div>
+          <div className="bg-white rounded-xl shadow-lg p-4 flex flex-col items-center hover:scale-105 transition">
+            <img
+              src={build}
+              alt="BUilding Construction"
+              className="w-32 h-32 object-cover rounded-lg mb-4r"
+            />
+            <h3 className="text-lg font-bold text-orange-600 mb-2">
+              Building Construction
+            </h3>
+            <p className="text-gray-700 text-center">
+              From foundation to finish, we build with excellence.
+            </p>
+          </div>
+          <div className="bg-white rounded-xl shadow-lg p-4 flex flex-col items-center hover:scale-105 transition">
+            <img
+              src={sup}
+              alt="Construction Supervision"
+              className="w-32 h-32 object-cover rounded-lg mb-4"
+            />
+            <h3 className="text-lg font-bold text-orange-600 mb-2">
+              {" "}
+              Construction Supervision
+            </h3>
+            <p className="text-gray-700 text-center">
+              Proffessional oversight to ensure quality and compliance.
+            </p>
+          </div>
+          <div className="bg-white rounded-xl shadow-lg p-4 flex flex-col items-center hover:scale-105 transition">
+            <img
+              src={rend}
+              alt="3D Rendering"
+              className="w-32 h-32 object-cover rounded-lg mb-4"
+            />
+            <h3 className="text-xl font-semibold text-orange-600 mb-2">
+              3D Rendering
+            </h3>
+            <p className="text-gray-700 text-center">
+              {" "}
+              Visualize your project with stunning, realisitic renderings.{" "}
+            </p>
+          </div>
+        </div>
       </section>
       <section className="mb-12">
         <h2 className="text-2xl font-semibold mb-4 text-orange-500">
