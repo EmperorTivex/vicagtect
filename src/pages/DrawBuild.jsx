@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import struct from "../assets/structeng.jpg";
 import sup from "../assets/constsupervise.jpg";
 import arc from "../assets/arcdesigns.jpg";
@@ -6,6 +7,7 @@ import build from "../assets/buildconst.jpg";
 import rend from "../assets/3Drend.jpg";
 
 const DrawBuild = () => {
+  const navigate = useNavigate();
   return (
     <div className="px-4 py-12 bg-white text-gray-800">
       <h1 className="text-4xl font-bold text-orange-600 text-center mb-6">
@@ -105,7 +107,10 @@ const DrawBuild = () => {
         </ol>
       </section>
       <div className="text-center mt-10">
-        <button className="bg-orange-600 text-white px-6 py-3 rounded-full hover:bg-orange-700 transition">
+        <button
+          className="bg-orange-600 text-white px-6 py-3 rounded-full hover:bg-orange-700 transition"
+          onClick={() => navigate("/contact")}
+        >
           {" "}
           Request a Quote
         </button>
