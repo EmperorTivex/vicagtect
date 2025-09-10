@@ -30,9 +30,11 @@ export default function Navbar() {
         </svg>
       </button>
       <ul
-        className={`flex-col sm:flex-row flex gap-4 sm:gap-6 w-full sm:w-auto ${
-          open ? "flex" : "hidden"
-        } sm:flex mt-4 sm:mt-o`}
+        className={`  ${
+          open
+            ? "flex flex-col absolute top-16 left-0 w-full bg-white shadow-md z-20 p-4"
+            : "hidden"
+        } sm:flex sm:flex-row sm:static sm:w-auto sm:bg-transparent sm:shadow-none sm:p-0 gap-4 sm:gap-6 mt-4 sm:mt-0`}
       >
         <li>
           {" "}
@@ -48,6 +50,16 @@ export default function Navbar() {
           >
             {" "}
             About
+          </Link>
+        </li>
+        <li>
+          {" "}
+          <Link
+            to="/realties"
+            className="hover:text-orange-500 block py-2 sm:py-0"
+          >
+            {" "}
+            Realties
           </Link>
         </li>
         <li>

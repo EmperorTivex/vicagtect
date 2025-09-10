@@ -22,6 +22,7 @@ import Overview from "./components/Dashboard/Overview";
 import AdminPanel from "./pages/admin/AdminPanel";
 import AddUser from "./pages/admin/AddUser";
 import AdminLogin from "./pages/admin/AdminLogin";
+import Realties from "./pages/Realties";
 /* Import inspiration from NIVAFER and VERITASI homes*/
 const AdminRoute = ({ children }) => {
   const isLoggedIn = localStorage.getItem("isAdminLoggedIn") === "true";
@@ -69,6 +70,7 @@ export default function App() {
               </AdminRoute>
             }
           />
+          <Route path="/realties" element={<Realties />} />
           {/* Add more routes as needed */}
         </Routes>
       </main>
