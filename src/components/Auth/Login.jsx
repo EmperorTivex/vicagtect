@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { db } from "../../firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
 
-function Login() {
+function Login({ setIsLoggedIn }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -23,6 +23,7 @@ function Login() {
       if (!querySnapshot.empty) {
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("investorName", username);
+        setIsLoggedIn && setIsLoggedIn(true);
         setError("");
         navigate("/dashboard");
       } else {

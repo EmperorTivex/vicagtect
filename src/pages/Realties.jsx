@@ -1,6 +1,8 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 function Realties() {
+  const navigate = useNavigate();
   return (
     <div className="bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-screen text-gray-800 ">
       <section className="bg-orange-600 text-white py-20 text-center">
@@ -12,7 +14,10 @@ function Realties() {
           up to 30% ROI while being invested in real estate projects you can see
           and trust.
         </p>
-        <button className="bg-white text-orange-600 px-6 py-3 font-bold rounded-full shadow-lg hover:bg-orange-100 hover:scale-105 transition text-lg animate-bounce">
+        <button
+          className="bg-white text-orange-600 px-6 py-3 font-bold rounded-full shadow-lg hover:bg-orange-100 hover:scale-105 transition text-lg animate-bounce"
+          onClick={() => navigate("/contact")}
+        >
           🤏Start Your Contribution Today
         </button>
       </section>
@@ -155,7 +160,10 @@ function Realties() {
           🚀 Dont let your money sit idle. Turn it into real estate wealth
           today.
         </h2>
-        <button className="bg-white  text-orange-600 px-8 py-4 font-bold rounded-full shadow-lg hover: bg-gray-100 hover:scale-105 transition text-lg animate-bounce">
+        <button
+          className="bg-white  text-orange-600 px-8 py-4 font-bold rounded-full shadow-lg hover: bg-gray-100 hover:scale-105 transition text-lg animate-bounce"
+          onClick={() => navigate("/contact")}
+        >
           👉🏽 Start Your Contribution Now
         </button>
         <div className="mt-8 text-lg font-medium">
