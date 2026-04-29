@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 function Footer() {
   return (
     <footer className="bg-white border-t border-gray-200 text-black py-10 px-4 sm:px-6">
@@ -12,33 +14,29 @@ function Footer() {
           <h3 className="font-semibold mb-2"> Quick Links </h3>
           <ul className="space-y-1">
             <li>
-              <a href="/" className="hover:text-orange-600">
-                {" "}
-                Home{" "}
-              </a>
+              <Link to="/" className="hover:text-orange-600">
+                Home
+              </Link>
             </li>
             <li>
-              <a href="/about" className="hover:text-orange-600">
-                {" "}
+              <Link to="/about" className="hover:text-orange-600">
                 About Us
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="/estates" className="hover:text-orange-600">
+              <Link to="/estates" className="hover:text-orange-600">
                 Our Estates
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="/draw-and-build" className="hover:text-orange-600">
-                {" "}
+              <Link to="/draw-build" className="hover:text-orange-600">
                 Design & Build
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="/contact" className="hover:text-orange-600">
-                {" "}
+              <Link to="/contact" className="hover:text-orange-600">
                 Contact
-              </a>
+              </Link>
             </li>
           </ul>
         </div>

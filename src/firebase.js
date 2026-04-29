@@ -2,12 +2,12 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDMQrlYspz9j8idt3z4oYnsip6DJJsX0L0",
-  authDomain: "vicagtect-b8282.firebaseapp.com",
-  projectId: "vicagtect-b8282",
-  storageBucket: "vicagtect-b8282.firebasestorage.app",
-  messagingSenderId: "1073745936763",
-  appId: "1:1073745936763:web:46a9f288f75f5962acfdde",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);

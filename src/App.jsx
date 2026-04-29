@@ -19,11 +19,10 @@ import Dashboard from "./components/Dashboard/Overview";
 import Portfolio from "./components/Dashboard/Portfolio";
 import Ajebo from "./pages/Ajebo";
 import Overview from "./components/Dashboard/Overview";
-import AdminPanel from "./pages/admin/AdminPanel";
-import AddUser from "./pages/admin/AddUser";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminLogin from "./pages/admin/AdminLogin";
 import Realties from "./pages/Realties";
-import AllInvestors from "./pages/admin/AllInvestors";
+
 /* Import inspiration from NIVAFER and VERITASI homes*/
 const AdminRoute = ({ children }) => {
   const isLoggedIn = localStorage.getItem("isAdminLoggedIn") === "true";
@@ -63,28 +62,11 @@ export default function App() {
             path="/admin-panel"
             element={
               <AdminRoute>
-                <AdminPanel />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/add-user"
-            element={
-              <AdminRoute>
-                <AddUser />
+                <AdminDashboard />
               </AdminRoute>
             }
           />
           <Route path="/realties" element={<Realties />} />
-          <Route
-            path="/all-investors"
-            element={
-              <AdminRoute>
-                <AllInvestors />
-              </AdminRoute>
-            }
-          />
-          {/* Add more routes as needed */}
         </Routes>
       </main>
       <Footer />
