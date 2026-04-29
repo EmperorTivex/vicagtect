@@ -4,6 +4,7 @@ import { db } from "../../firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import MigrateInvestors from "../MigrateInvestors";
 
 function AdminPanel() {
   const navigate = useNavigate();
@@ -53,6 +54,7 @@ function AdminPanel() {
       >
         Logout
       </button>
+      <MigrateInvestors />
       <div className="bg-white shadow-md rounded-lg p-4 sm:p-8 w-full max-w-md sm:max-w-lg">
         <h2 className="text-2xl font-bold mb-6 text-orange-600 text-center">
           Admin Panel
@@ -103,3 +105,4 @@ function AdminPanel() {
 }
 
 export default AdminPanel;
+export { db };
