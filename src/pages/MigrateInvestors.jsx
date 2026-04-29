@@ -1,14 +1,14 @@
 import React from "react";
 
 import { db } from "./admin/AdminPanel";
-import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 
 function MigrateInvestors() {
   const handleMigrate = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, "investors"));
 
-      querySnapshot.forEach(async (docSnap) => {
+      const migrationPromises = querySnapshot.docs.map(async (docSnap) => {
         const investorRef = doc(db, "investors", docSnap.id);
         const data = docSnap.data();
 
@@ -23,6 +23,8 @@ function MigrateInvestors() {
           console.log(`✅ Updated ${docSnap.id} with`, updatedFields);
         }
       });
+
+      await Promise.all(migrationPromises);
 
       alert("Migration complete! 🎉 Check your database.");
     } catch (error) {

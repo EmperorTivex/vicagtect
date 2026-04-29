@@ -5,58 +5,72 @@ import { Link } from "react-router-dom";
 function Constructionsection() {
   return (
     <motion.section
-      className="py-10 md:py-16 bg-gray-100"
-      initial={{ opacity: 0, y: 40 }}
+      className="py-12 md:py-20 bg-white"
+      initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7, ease: "easeOut" }}
+      transition={{ duration: 0.8 }}
       viewport={{ once: true }}
     >
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="max-w-6xl mx-auto px-6">
         <motion.h2
-          className="text-2xl md:text-3xl font-bold text-center text-orange-500 mb-6 md:mb-8"
+          className="text-3xl md:text-4xl font-extrabold text-center text-gray-800 mb-10 md:mb-16"
           initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
           viewport={{ once: true }}
         >
-          Our Construction Services
+          Our <span className="text-orange-600">Construction</span> Services
         </motion.h2>
-        <div className="grid md:grid-cols-2 gap-8 items-center mb-6">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
           {/* Placeholder image until you upload a real one */}
           <motion.img
             src={construction2}
             alt="Construction Site"
-            className="rounded-xl shadow-md w-full h-56 md:h-auto object-cover"
+            className="rounded-2xl shadow-2xl w-full h-64 md:h-[450px] object-cover"
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, delay: 0.3 }}
             viewport={{ once: true }}
           />
-        </div>
-        <motion.div
-          initial={{ opacity: 0, x: 40 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.7, delay: 0.4 }}
-          viewport={{ once: true }}
-        >
-          <p className="mb-4 text-gray-700 text-base md:text-lg">
-            From detailed architectural drawings to structural design and full
-            building execution, Vicagtect provides a comprehensive 'Design and
-            Build ' service tailored to your needs.
-          </p>
-          <ul className="list-disc list-inside space-y-2 text-gray-600 text-sm md:text-base">
-            <li>Architectural & Structural Drawings.</li>
-            <li>Building Construction with Integrity</li>
-            <li>Supervised Projects by Certified Engineers</li>
-            <li>Transparent and Affordable Pricing.</li>
-          </ul>
-          <Link
-            to="/contact"
-            className="mt-6 bg-orange-500 px-6 py-2 rounded-full hover:bg-range-600 transition w-full md:w-auto text-center block"
+          <motion.div
+            className="space-y-6"
+            initial={{ opacity: 0, x: 40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7, delay: 0.4 }}
+            viewport={{ once: true }}
           >
-            Start Your Project
-          </Link>
-        </motion.div>
+            <p className="text-gray-600 text-lg md:text-xl leading-relaxed">
+              From detailed architectural drawings to structural design and full
+              building execution, Vicagtect provides a comprehensive{" "}
+              <span className="font-semibold text-orange-600">
+                'Design and Build'
+              </span>{" "}
+              service tailored to your needs.
+            </p>
+            <ul className="space-y-4">
+              {[
+                "Architectural & Structural Drawings",
+                "Building Construction with Integrity",
+                "Supervised Projects by Certified Engineers",
+                "Transparent and Affordable Pricing",
+              ].map((item, index) => (
+                <li
+                  key={index}
+                  className="flex items-center text-gray-700 text-base md:text-lg"
+                >
+                  <span className="w-2 h-2 bg-orange-500 rounded-full mr-3" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <Link
+              to="/contact"
+              className="inline-block mt-4 bg-orange-600 text-white font-bold px-8 py-3 rounded-full hover:bg-orange-700 hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 w-full md:w-auto text-center"
+            >
+              Start Your Project
+            </Link>
+          </motion.div>
+        </div>
       </div>
     </motion.section>
   );
