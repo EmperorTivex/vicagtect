@@ -4,12 +4,12 @@ import { db } from "../../firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import MigrateInvestors from "../MigrateInvestors";
 
 function AdminPanel() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
+  const [plan, setPlan] = useState("18 Months");
   const [status, setStatus] = useState("Active");
   const [message, setMessage] = useState("");
   useEffect(() => {
@@ -32,13 +32,15 @@ function AdminPanel() {
     try {
       await addDoc(collection(db, "investors"), {
         name,
-        amount,
+        amount: Number(amount) || 0,
+        plan,
         status,
         date: Timestamp.now(),
       });
       setMessage("Investor data saved ✅");
       setName("");
       setAmount("");
+      setPlan("18 Months");
       setStatus("Active");
     } catch (err) {
       setMessage("Error saving data ❌ ");
@@ -54,7 +56,6 @@ function AdminPanel() {
       >
         Logout
       </button>
-      <MigrateInvestors />
       <div className="bg-white shadow-md rounded-lg p-4 sm:p-8 w-full max-w-md sm:max-w-lg">
         <h2 className="text-2xl font-bold mb-6 text-orange-600 text-center">
           Admin Panel
@@ -69,7 +70,7 @@ function AdminPanel() {
           />
 
           <input
-            type="text"
+            type="number"
             placeholder="Amount Invested (₦)"
             className="w-full mb-4 px-4 py-2 border rounded"
             value={amount}
@@ -77,13 +78,23 @@ function AdminPanel() {
           />
 
           <select
+            className="w-full mb-4 px-4 py-2 border rounded"
+            value={plan}
+            onChange={(e) => setPlan(e.target.value)}
+          >
+            <option value="18 Months">18 Months</option>
+            <option value="36 Months">36 Months</option>
+            <option value="60 Months">60 Months</option>
+          </select>
+
+          <select
             className="w-full mb-4 px-4 py-2 border rounded "
             value={status}
             onChange={(e) => setStatus(e.target.value)}
           >
-            <option> Active</option>
-            <option>Pending</option>
-            <option>Inactive</option>
+            <option value="Active"> Active</option>
+            <option value="Pending">Pending</option>
+            <option value="Inactive">Inactive</option>
           </select>
 
           <button
@@ -95,9 +106,6 @@ function AdminPanel() {
           {message && (
             <p className="mt-4 text-center text-sm text-gray-700">{message} </p>
           )}
-        </form>
-        <form action="">
-          <input type="text" />
         </form>
       </div>
     </div>
