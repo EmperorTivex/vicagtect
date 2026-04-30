@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../firebase";
+import { motion } from "framer-motion";
 import {
   collection,
   getDocs,
@@ -218,7 +219,11 @@ function AdminDashboard() {
 
         <div className="max-w-6xl mx-auto">
           {activeTab === "overview" && (
-            <section className="animate-in fade-in duration-500">
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
               <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
                 <div>
                   <h1 className="text-4xl font-black text-gray-800 tracking-tight">
@@ -334,11 +339,16 @@ function AdminDashboard() {
                   </div>
                 </div>
               )}
-            </section>
+            </motion.section>
           )}
 
           {(activeTab === "add" || activeTab === "edit") && (
-            <section className="max-w-2xl mx-auto animate-in zoom-in duration-300">
+            <motion.section
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="max-w-2xl mx-auto"
+            >
               <header className="text-center mb-12">
                 <div className="inline-block p-4 bg-orange-100 rounded-3xl mb-4 text-3xl">
                   {activeTab === "add" ? "👤" : "📝"}
@@ -503,7 +513,7 @@ function AdminDashboard() {
                   </div>
                 </form>
               </div>
-            </section>
+            </motion.section>
           )}
         </div>
       </main>
