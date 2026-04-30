@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
-import { db } from "../../firebase";
+import { auth, db } from "../../firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import Logo from "../../assets/Logo.png";
 
 function Login({ setIsLoggedIn }) {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -18,26 +19,37 @@ function Login({ setIsLoggedIn }) {
     setError("");
 
     try {
-      // Note: We are still using Firestore query for compatibility with your current DB structure.
-      // In a production environment, I recommend migrating to Firebase Authentication.
+      // 1. Authenticate with Firebase Auth
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // 2. Fetch investor details from Firestore to get their name
       const q = query(
-        collection(db, "logins"),
-        where("username", "==", username),
-        where("password", "==", password)
+        collection(db, "investors"),
+        where("uid", "==", user.uid)
       );
       const querySnapshot = await getDocs(q);
       
+      let investorName = email; // Fallback
       if (!querySnapshot.empty) {
-        localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("investorName", username);
-        if (setIsLoggedIn) setIsLoggedIn(true);
-        navigate("/dashboard");
-      } else {
-        setError("The username or password you entered is incorrect.");
+        investorName = querySnapshot.docs[0].data().name;
       }
+      
+      // 3. Set Session
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("investorName", investorName);
+      localStorage.setItem("userEmail", email);
+      
+      if (setIsLoggedIn) setIsLoggedIn(true);
+      navigate("/dashboard");
+
     } catch (err) {
       console.error("Login error:", err);
-      setError("We encountered a technical issue. Please try again.");
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        setError("The email or password you entered is incorrect.");
+      } else {
+        setError("We encountered a technical issue. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -69,15 +81,15 @@ function Login({ setIsLoggedIn }) {
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
               <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
-                Username
+                Email Address
               </label>
               <input
-                type="text"
+                type="email"
                 required
-                placeholder="Enter your username"
+                placeholder="Enter your email"
                 className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none font-bold text-gray-700 transition-all"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
 

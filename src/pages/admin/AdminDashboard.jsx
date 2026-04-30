@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { db } from "../../firebase";
+import { db, auth } from "../../firebase";
 import { motion } from "framer-motion";
 import {
   collection,
@@ -10,6 +10,7 @@ import {
   doc,
   Timestamp,
 } from "firebase/firestore";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
 function AdminDashboard() {
@@ -23,6 +24,7 @@ function AdminDashboard() {
   // Form State
   const [formData, setFormData] = useState({
     name: "",
+    email: "",
     amount: "",
     plan: "18 Months",
     status: "Active",
@@ -69,33 +71,40 @@ function AdminDashboard() {
 
   const handleAddInvestor = async (e) => {
     e.preventDefault();
-    const { name, amount, plan, status, password } = formData;
+    const { name, email, amount, plan, status, password } = formData;
 
-    if (!name || !amount || !password) {
+    if (!name || !email || !amount || !password) {
       showFeedback("Please fill in all required fields", "error");
+      return;
+    }
+
+    if (password.length < 6) {
+      showFeedback("Password must be at least 6 characters", "error");
       return;
     }
 
     try {
       setLoading(true);
-      // 1. Create Investor Profile
+      
+      // 1. Create Secure Auth Account
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // 2. Create Investor Profile in Firestore linked by UID
       await addDoc(collection(db, "investors"), {
+        uid: user.uid,
         name,
+        email,
         amount: Number(amount),
         plan,
         status,
         date: Timestamp.now(),
       });
 
-      // 2. Create Login Account
-      await addDoc(collection(db, "logins"), {
-        username: name,
-        password: password,
-      });
-
-      showFeedback("Investor and Login created successfully!", "success");
+      showFeedback("Investor and Secure Account created!", "success");
       setFormData({
         name: "",
+        email: "",
         amount: "",
         plan: "18 Months",
         status: "Active",
@@ -105,7 +114,10 @@ function AdminDashboard() {
       setActiveTab("overview");
     } catch (err) {
       console.error(err);
-      showFeedback("Error saving data", "error");
+      let errorMsg = "Error saving data";
+      if (err.code === 'auth/email-already-in-use') errorMsg = "Email already registered";
+      if (err.code === 'auth/invalid-email') errorMsg = "Invalid email format";
+      showFeedback(errorMsg, "error");
     } finally {
       setLoading(false);
     }
@@ -376,7 +388,7 @@ function AdminDashboard() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
-                          Full Name (Login Username)
+                          Full Name
                         </label>
                         <input
                           type="text"
@@ -389,6 +401,20 @@ function AdminDashboard() {
                         />
                       </div>
                       <div className="space-y-2">
+                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
+                          Email Address
+                        </label>
+                        <input
+                          type="email"
+                          className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none font-bold text-gray-700 transition-all"
+                          value={formData.email}
+                          onChange={(e) =>
+                            setFormData({ ...formData, email: e.target.value })
+                          }
+                          placeholder="investor@example.com"
+                        />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
                         <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
                           Account Password
                         </label>

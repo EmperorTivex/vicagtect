@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import reactLogo from "./assets/react.svg";
 // import viteLogo from "/vite.svg";
-import "./App.css";
+import { auth } from "./firebase";
+import { onAuthStateChanged } from "firebase/auth";
 import Navbar from "./components/Navbar";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Navigate } from "react-router-dom";
@@ -31,10 +32,32 @@ const AdminRoute = ({ children }) => {
 };
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const loggedIn = localStorage.getItem("isLoggedIn") === "true";
-    setIsLoggedIn(loggedIn);
+    // Listen for real-time auth changes
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsLoggedIn(true);
+        localStorage.setItem("isLoggedIn", "true");
+      } else {
+        setIsLoggedIn(false);
+        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("investorName");
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="w-12 h-12 border-4 border-orange-100 border-t-orange-600 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <Router>
