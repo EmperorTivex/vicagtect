@@ -21,6 +21,7 @@ import Ajebo from "./pages/Ajebo";
 import Overview from "./components/Dashboard/Overview";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminLogin from "./pages/admin/AdminLogin";
+import ForgotPassword from "./pages/ForgotPassword";
 import Realties from "./pages/Realties";
 
 /* Import inspiration from NIVAFER and VERITASI homes*/
@@ -52,6 +53,7 @@ export default function App() {
           <Route path="/phase3" element={<PhaseThree />} />
           <Route path="/ajebo" element={<Ajebo />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route
             path="/dashboard"
             element={isLoggedIn ? <Overview /> : <Navigate to="/login" />}
