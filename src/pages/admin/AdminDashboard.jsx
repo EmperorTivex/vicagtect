@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { db, auth } from "../../firebase";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   collection,
   getDocs,
@@ -9,6 +9,8 @@ import {
   deleteDoc,
   doc,
   Timestamp,
+  query,
+  where,
 } from "firebase/firestore";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +22,11 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ text: "", type: "" });
   const [selectedInvestor, setSelectedInvestor] = useState(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentData, setPaymentData] = useState({
+    amount: "",
+    type: "Top-up",
+  });
 
   // Form State
   const [formData, setFormData] = useState({
@@ -78,20 +85,19 @@ function AdminDashboard() {
       return;
     }
 
-    if (password.length < 6) {
-      showFeedback("Password must be at least 6 characters", "error");
-      return;
-    }
-
     try {
       setLoading(true);
-      
-      // 1. Create Secure Auth Account
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+      // 1. Create Secure Auth Account (The "ATM Card")
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
       const user = userCredential.user;
 
-      // 2. Create Investor Profile in Firestore linked by UID
-      await addDoc(collection(db, "investors"), {
+      // 2. Create Investor Profile (The "Bank Account")
+      const investorDoc = await addDoc(collection(db, "investors"), {
         uid: user.uid,
         name,
         email,
@@ -101,7 +107,21 @@ function AdminDashboard() {
         date: Timestamp.now(),
       });
 
-      showFeedback("Investor and Secure Account created!", "success");
+      // 3. Create Initial Transaction (The "Opening Deposit")
+      await addDoc(collection(db, "transactions"), {
+        investorId: investorDoc.id,
+        investorUid: user.uid,
+        amount: Number(amount),
+        type: "Initial Investment",
+        date: Timestamp.now(),
+        description: `Account opened with ${plan} plan`,
+        reference: `VIC-${Math.floor(100000 + Math.random() * 900000)}`,
+      });
+
+      showFeedback(
+        "Investor account and first transaction recorded!",
+        "success",
+      );
       setFormData({
         name: "",
         email: "",
@@ -115,9 +135,52 @@ function AdminDashboard() {
     } catch (err) {
       console.error(err);
       let errorMsg = "Error saving data";
-      if (err.code === 'auth/email-already-in-use') errorMsg = "Email already registered";
-      if (err.code === 'auth/invalid-email') errorMsg = "Invalid email format";
+      if (err.code === "auth/email-already-in-use")
+        errorMsg = "Email already registered";
       showFeedback(errorMsg, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddPayment = async (e) => {
+    e.preventDefault();
+    if (!paymentData.amount || Number(paymentData.amount) <= 0) {
+      showFeedback("Please enter a valid amount", "error");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      // 1. Record the Transaction
+      await addDoc(collection(db, "transactions"), {
+        investorId: selectedInvestor.id,
+        investorUid: selectedInvestor.uid,
+        amount: Number(paymentData.amount),
+        type: paymentData.type,
+        date: Timestamp.now(),
+        description: "Additional contribution added via Admin",
+        reference: `VIC-${Math.floor(100000 + Math.random() * 900000)}`,
+      });
+
+      // 2. Update the Total Invested in Investor doc
+      const investorRef = doc(db, "investors", selectedInvestor.id);
+      await updateDoc(investorRef, {
+        amount:
+          Number(selectedInvestor.amount || 0) + Number(paymentData.amount),
+      });
+
+      showFeedback(
+        `₦${Number(paymentData.amount).toLocaleString()} added to ${selectedInvestor.name}'s portfolio`,
+        "success",
+      );
+      fetchInvestors();
+      setShowPaymentModal(false);
+      setPaymentData({ amount: "", type: "Top-up" });
+      setSelectedInvestor(null);
+    } catch (err) {
+      console.error(err);
+      showFeedback("Failed to record payment", "error");
     } finally {
       setLoading(false);
     }
@@ -325,6 +388,16 @@ function AdminDashboard() {
                             </td>
                             <td className="px-8 py-6 text-right">
                               <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => {
+                                    setSelectedInvestor(inv);
+                                    setShowPaymentModal(true);
+                                  }}
+                                  className="p-2 bg-green-50 text-green-600 rounded-xl hover:bg-green-600 hover:text-white transition-all"
+                                  title="Add Payment"
+                                >
+                                  💰
+                                </button>
                                 <button
                                   onClick={() => {
                                     setSelectedInvestor(inv);
@@ -543,6 +616,103 @@ function AdminDashboard() {
           )}
         </div>
       </main>
+
+      {/* Payment Modal */}
+      <AnimatePresence>
+        {showPaymentModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowPaymentModal(false)}
+              className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl p-8 md:p-12 overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 p-8">
+                <button
+                  onClick={() => setShowPaymentModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <header className="mb-10">
+                <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center text-3xl mb-4">
+                  💰
+                </div>
+                <h2 className="text-3xl font-black text-gray-800 tracking-tight">
+                  Add Payment
+                </h2>
+                <p className="text-gray-500 font-medium">
+                  Recording new contribution for{" "}
+                  <span className="text-orange-600 font-bold">
+                    {selectedInvestor?.name}
+                  </span>
+                </p>
+              </header>
+
+              <form onSubmit={handleAddPayment} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
+                    Payment Amount (₦)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-green-500 outline-none font-black text-2xl text-gray-800 transition-all"
+                    placeholder="1,000,000"
+                    value={paymentData.amount}
+                    onChange={(e) =>
+                      setPaymentData({ ...paymentData, amount: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
+                    Payment Type
+                  </label>
+                  <select
+                    className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-green-500 font-bold text-gray-700 transition-all appearance-none"
+                    value={paymentData.type}
+                    onChange={(e) =>
+                      setPaymentData({ ...paymentData, type: e.target.value })
+                    }
+                  >
+                    <option value="Top-up">Top-up Investment</option>
+                    <option value="Monthly Contribution">
+                      Monthly Contribution
+                    </option>
+                    <option value="Bonus/ROI Reinvestment">
+                      Bonus/ROI Reinvestment
+                    </option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-green-600 text-white py-5 rounded-2xl font-black text-lg hover:bg-green-700 shadow-xl shadow-green-200 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+                >
+                  {loading ? (
+                    <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  ) : (
+                    <>Confirm Payment 🚀</>
+                  )}
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
