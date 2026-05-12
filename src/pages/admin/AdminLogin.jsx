@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
-import { db } from "../../firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { auth, db } from "../../firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 import Logo from "../../assets/Logo.png";
 
 function AdminLogin() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -18,23 +19,27 @@ function AdminLogin() {
     setError("");
 
     try {
-      const q = query(
-        collection(db, "admins"),
-        where("username", "==", username),
-        where("password", "==", password)
-      );
+      // 1. Authenticate with Firebase Auth
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-      const querySnapshot = await getDocs(q);
+      // 2. Check if a document with this UID exists in the 'admins' collection
+      const adminDocRef = doc(db, "admins", user.uid);
+      const adminDoc = await getDoc(adminDocRef);
 
-      if (!querySnapshot.empty) {
+      if (adminDoc.exists() && adminDoc.data().role === "admin") {
         localStorage.setItem("isAdminLoggedIn", "true");
         navigate("/admin-panel");
       } else {
-        setError("Invalid administrative credentials.");
+        setError("Unauthorized access. Admin privileges required.");
       }
     } catch (err) {
       console.error("Login error:", err);
-      setError("Authorization server error. Please contact the systems administrator.");
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        setError("Invalid administrative credentials.");
+      } else {
+        setError("System error. Please check your internet connection.");
+      }
     } finally {
       setLoading(false);
     }
@@ -51,7 +56,11 @@ function AdminLogin() {
         {/* Admin Brand Identity */}
         <div className="text-center mb-10">
           <Link to="/" className="inline-block mb-6">
-            <img src={Logo} alt="Vicagtect Logo" className="h-16 w-auto mx-auto brightness-0 invert" />
+            <img
+              src={Logo}
+              alt="Vicagtect Logo"
+              className="h-16 w-auto mx-auto brightness-0 invert"
+            />
           </Link>
           <h1 className="text-3xl font-black text-white tracking-tight mb-2 uppercase">
             Systems Admin
@@ -66,15 +75,15 @@ function AdminLogin() {
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">
-                Admin Username
+                Admin Email
               </label>
               <input
-                type="text"
+                type="email"
                 required
                 className="w-full px-6 py-4 bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-orange-600 outline-none font-bold text-gray-200 transition-all placeholder-gray-600"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Access ID"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@vicagtect.com"
               />
             </div>
 
@@ -112,7 +121,9 @@ function AdminLogin() {
               disabled={loading}
               className="w-full bg-orange-600 text-white py-5 rounded-2xl font-black text-lg hover:bg-orange-700 shadow-xl shadow-orange-900/20 transition-all disabled:opacity-50 relative overflow-hidden group uppercase tracking-widest"
             >
-              <span className={loading ? "opacity-0" : "opacity-100"}>Authenticate</span>
+              <span className={loading ? "opacity-0" : "opacity-100"}>
+                Authenticate
+              </span>
               {loading && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>

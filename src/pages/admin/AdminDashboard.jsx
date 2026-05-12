@@ -87,14 +87,15 @@ function AdminDashboard() {
 
     try {
       setLoading(true);
-
+      
       // 1. Create Secure Auth Account (The "ATM Card")
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password,
-      );
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+
+      // Calculate Maturity Date (e.g., based on plan)
+      const monthsToAdd = plan.includes("18") ? 18 : plan.includes("12") ? 12 : 24;
+      const maturityDate = new Date();
+      maturityDate.setMonth(maturityDate.getMonth() + monthsToAdd);
 
       // 2. Create Investor Profile (The "Bank Account")
       const investorDoc = await addDoc(collection(db, "investors"), {
@@ -105,6 +106,8 @@ function AdminDashboard() {
         plan,
         status,
         date: Timestamp.now(),
+        maturityDate: Timestamp.fromDate(maturityDate),
+        interestRate: 0.30, // 30% ROI default
       });
 
       // 3. Create Initial Transaction (The "Opening Deposit")
@@ -191,12 +194,16 @@ function AdminDashboard() {
     try {
       setLoading(true);
       const investorRef = doc(db, "investors", selectedInvestor.id);
-      await updateDoc(investorRef, {
+      
+      // Calculate new maturity if plan changed
+      let updateData = {
         amount: Number(selectedInvestor.amount),
         plan: selectedInvestor.plan,
         status: selectedInvestor.status,
-      });
-      showFeedback("Investor updated successfully!", "success");
+      };
+
+      await updateDoc(investorRef, updateData);
+      showFeedback("Investor profile updated successfully!", "success");
       fetchInvestors();
       setActiveTab("overview");
       setSelectedInvestor(null);
@@ -552,12 +559,37 @@ function AdminDashboard() {
                               })
                         }
                       >
-                        <option>18 Months</option>
-                        <option>36 Months</option>
-                        <option>60 Months</option>
+                        <option value="12 Months">12 Months (25% ROI)</option>
+                        <option value="18 Months">18 Months (30% ROI)</option>
+                        <option value="24 Months">24 Months (40% ROI)</option>
                       </select>
                     </div>
                     <div className="space-y-2">
+                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
+                        Investor Tier (VIP Tag)
+                      </label>
+                      <select
+                        className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 font-bold text-gray-700 transition-all appearance-none"
+                        value={
+                          activeTab === "add"
+                            ? formData.tier
+                            : selectedInvestor?.tier
+                        }
+                        onChange={(e) =>
+                          activeTab === "add"
+                            ? setFormData({ ...formData, tier: e.target.value })
+                            : setSelectedInvestor({
+                                ...selectedInvestor,
+                                tier: e.target.value,
+                              })
+                        }
+                      >
+                        <option value="Silver">Silver Investor</option>
+                        <option value="Gold">Gold VIP</option>
+                        <option value="Diamond">Diamond Elite</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
                       <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
                         Current Status
                       </label>
@@ -580,9 +612,9 @@ function AdminDashboard() {
                               })
                         }
                       >
-                        <option>Active</option>
-                        <option>Pending</option>
-                        <option>Inactive</option>
+                        <option value="Active">Active</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Inactive">Inactive</option>
                       </select>
                     </div>
                   </div>

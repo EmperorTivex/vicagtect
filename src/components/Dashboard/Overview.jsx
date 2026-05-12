@@ -37,6 +37,32 @@ function Overview() {
     }
   }, [name]);
 
+  const calculateInterest = () => {
+    if (!investor) return 0;
+    const amount = Number(investor.amount || 0);
+    const rate = investor.interestRate || 0.30;
+    const startDate = investor.date?.seconds ? new Date(investor.date.seconds * 1000) : new Date();
+    const now = new Date();
+    
+    // Calculate time elapsed in months
+    const monthsElapsed = (now.getFullYear() - startDate.getFullYear()) * 12 + (now.getMonth() - startDate.getMonth());
+    const totalMonths = investor.plan?.includes("18") ? 18 : 12;
+    
+    // Simple interest calculation for mock display
+    const totalInterest = amount * rate;
+    const earnedInterest = (monthsElapsed / totalMonths) * totalInterest;
+    return Math.max(0, earnedInterest);
+  };
+
+  const getMaturityCountdown = () => {
+    if (!investor?.maturityDate?.seconds) return "N/A";
+    const maturity = new Date(investor.maturityDate.seconds * 1000);
+    const now = new Date();
+    const diffTime = maturity - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? `${diffDays} Days Left` : "Matured";
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -81,51 +107,70 @@ function Overview() {
               <span className="text-xs font-black text-orange-600 uppercase tracking-[0.3em] mb-3 inline-block">
                 Market Overview
               </span>
-              <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-4">
+              <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-4 flex items-center gap-4 flex-wrap">
                 Good day, <span className="text-orange-600">{investor.name.split(' ')[0]}</span>
+                {investor.tier && (
+                  <span className={`text-[10px] px-4 py-1.5 rounded-full border font-black uppercase tracking-[0.2em] shadow-sm ${
+                    investor.tier === 'Diamond' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                    investor.tier === 'Gold' ? 'bg-yellow-50 text-yellow-700 border-yellow-100' :
+                    'bg-gray-50 text-gray-600 border-gray-100'
+                  }`}>
+                    {investor.tier === 'Diamond' ? '💎 ' : investor.tier === 'Gold' ? '👑 ' : '🥈 '}
+                    {investor.tier} Elite
+                  </span>
+                )}
               </h1>
               <p className="text-gray-500 font-medium text-lg">Your real estate assets are currently performing at peak capacity.</p>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-              <div className="bg-white p-10 rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-gray-100 flex flex-col relative overflow-hidden group">
-                <div className="absolute -top-4 -right-4 w-24 h-24 bg-orange-50 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
-                <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">
-                  Portfolio Value
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+              <div className="bg-white p-8 rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 flex flex-col relative overflow-hidden group">
+                <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">
+                  Invested
                 </h2>
-                <p className="text-4xl font-black text-gray-900 tracking-tighter mb-2">
+                <p className="text-2xl font-black text-gray-900 tracking-tighter mb-1">
                   ₦{Number(investor.amount).toLocaleString()}
                 </p>
-                <div className="text-green-600 text-xs font-bold flex items-center gap-1">
-                  <span>📈</span> +0.0% this month
+                <div className="text-green-600 text-[10px] font-bold">
+                  Secure Asset
                 </div>
               </div>
 
-              <div className="bg-white p-10 rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-gray-100 flex flex-col relative overflow-hidden group">
-                <div className="absolute -top-4 -right-4 w-24 h-24 bg-blue-50 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
-                <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">
-                  Growth Strategy
+              <div className="bg-white p-8 rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 flex flex-col relative overflow-hidden group">
+                <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">
+                  Interest Earned
                 </h2>
-                <p className="text-3xl font-black text-gray-900 tracking-tight mb-2">
-                  {investor.plan || "Standard"}
+                <p className="text-2xl font-black text-orange-600 tracking-tighter mb-1">
+                  ₦{calculateInterest().toLocaleString(undefined, { maximumFractionDigits: 0 })}
                 </p>
-                <div className="text-blue-600 text-xs font-bold uppercase tracking-widest">
-                  Active Subscription
+                <div className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">
+                  Estimated ROI
                 </div>
               </div>
 
-              <div className="bg-white p-10 rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-gray-100 flex flex-col relative overflow-hidden group">
-                <div className="absolute -top-4 -right-4 w-24 h-24 bg-green-50 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
-                <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">
-                  Account Status
+              <div className="bg-white p-8 rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 flex flex-col relative overflow-hidden group">
+                <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">
+                  Maturity
                 </h2>
-                <div className={`text-2xl font-black uppercase tracking-tighter mb-2 ${
+                <p className="text-2xl font-black text-gray-900 tracking-tighter mb-1">
+                  {getMaturityCountdown()}
+                </p>
+                <div className="text-blue-600 text-[10px] font-bold uppercase tracking-widest">
+                  Countdown
+                </div>
+              </div>
+
+              <div className="bg-white p-8 rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 flex flex-col relative overflow-hidden group">
+                <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">
+                  Status
+                </h2>
+                <div className={`text-xl font-black uppercase tracking-tighter mb-1 ${
                   investor.status === 'Active' ? 'text-green-600' : 'text-yellow-600'
                 }`}>
                   {investor.status}
                 </div>
                 <div className="text-gray-400 text-[10px] font-black uppercase tracking-widest">
-                  Verified Investor
+                  Verified
                 </div>
               </div>
             </div>
