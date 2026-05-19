@@ -80,6 +80,15 @@ function AdminDashboard() {
     e.preventDefault();
     const { name, email, amount, plan, status, password } = formData;
 
+    // Password validation should be strengthened
+    if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password)) {
+      showFeedback(
+        "Password must be at least 8 characters long, include letters and numbers",
+        "error",
+      );
+      return;
+    }
+
     if (!name || !email || !amount || !password) {
       showFeedback("Please fill in all required fields", "error");
       return;
@@ -87,13 +96,21 @@ function AdminDashboard() {
 
     try {
       setLoading(true);
-      
+
       // 1. Create Secure Auth Account (The "ATM Card")
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
       const user = userCredential.user;
 
       // Calculate Maturity Date (e.g., based on plan)
-      const monthsToAdd = plan.includes("18") ? 18 : plan.includes("12") ? 12 : 24;
+      const monthsToAdd = plan.includes("18")
+        ? 18
+        : plan.includes("12")
+          ? 12
+          : 24;
       const maturityDate = new Date();
       maturityDate.setMonth(maturityDate.getMonth() + monthsToAdd);
 
@@ -107,7 +124,7 @@ function AdminDashboard() {
         status,
         date: Timestamp.now(),
         maturityDate: Timestamp.fromDate(maturityDate),
-        interestRate: 0.30, // 30% ROI default
+        interestRate: 0.3, // 30% ROI default
       });
 
       // 3. Create Initial Transaction (The "Opening Deposit")
@@ -194,12 +211,32 @@ function AdminDashboard() {
     try {
       setLoading(true);
       const investorRef = doc(db, "investors", selectedInvestor.id);
-      
-      // Calculate new maturity if plan changed
+
+      // Calculate new maturity based on the current plan and the original join date
+      const monthsToAdd = selectedInvestor.plan?.includes("18")
+        ? 18
+        : selectedInvestor.plan?.includes("12")
+          ? 12
+          : 24;
+
+      // Use the original join date if available, otherwise use now
+      const baseDate = selectedInvestor.date?.seconds
+        ? new Date(selectedInvestor.date.seconds * 1000)
+        : new Date();
+
+      const newMaturityDate = new Date(baseDate);
+      newMaturityDate.setMonth(newMaturityDate.getMonth() + monthsToAdd);
+
       let updateData = {
         amount: Number(selectedInvestor.amount),
         plan: selectedInvestor.plan,
         status: selectedInvestor.status,
+        maturityDate: Timestamp.fromDate(newMaturityDate),
+        interestRate: selectedInvestor.plan?.includes("24")
+          ? 0.4
+          : selectedInvestor.plan?.includes("18")
+            ? 0.3
+            : 0.25,
       };
 
       await updateDoc(investorRef, updateData);
