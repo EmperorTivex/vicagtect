@@ -1,7 +1,6 @@
-import React, { use } from "react";
+import React, { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
-import { useEffect, useState } from "react";
 import { db } from "../../firebase";
 import { collection, getDocs, where, query } from "firebase/firestore";
 
@@ -44,23 +43,38 @@ function Overview() {
     const startDate = investor.date?.seconds ? new Date(investor.date.seconds * 1000) : new Date();
     const now = new Date();
     
-    // Calculate time elapsed in months
-    const monthsElapsed = (now.getFullYear() - startDate.getFullYear()) * 12 + (now.getMonth() - startDate.getMonth());
-    const totalMonths = investor.plan?.includes("18") ? 18 : 12;
+    // Calculate time elapsed in days for more dynamic growth
+    const diffTime = Math.abs(now - startDate);
+    const daysElapsed = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    // Simple interest calculation for mock display
+    // Determine total days based on plan
+    const planMonths = parseInt(investor.plan) || 12;
+    const totalDays = planMonths * 30;
+    
+    // Simple interest calculation: (days elapsed / total days) * total ROI
     const totalInterest = amount * rate;
-    const earnedInterest = (monthsElapsed / totalMonths) * totalInterest;
-    return Math.max(0, earnedInterest);
+    const earnedInterest = (daysElapsed / totalDays) * totalInterest;
+    
+    // Add a tiny bit of "seed" interest if they just joined so it's not 0
+    return Math.max(daysElapsed > 0 ? earnedInterest : amount * 0.001, earnedInterest);
   };
 
   const getMaturityCountdown = () => {
-    if (!investor?.maturityDate?.seconds) return "N/A";
+    if (!investor?.maturityDate?.seconds) return "Calculating...";
     const maturity = new Date(investor.maturityDate.seconds * 1000);
     const now = new Date();
     const diffTime = maturity - now;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 ? `${diffDays} Days Left` : "Matured";
+    
+    if (diffDays <= 0) return "Matured 💰";
+    
+    const months = Math.floor(diffDays / 30);
+    const remainingDays = diffDays % 30;
+    
+    if (months > 0) {
+      return `${months}m ${remainingDays}d Left`;
+    }
+    return `${diffDays} Days Left`;
   };
 
   if (loading) {
@@ -109,16 +123,6 @@ function Overview() {
               </span>
               <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-4 flex items-center gap-4 flex-wrap">
                 Good day, <span className="text-orange-600">{investor.name.split(' ')[0]}</span>
-                {investor.tier && (
-                  <span className={`text-[10px] px-4 py-1.5 rounded-full border font-black uppercase tracking-[0.2em] shadow-sm ${
-                    investor.tier === 'Diamond' ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                    investor.tier === 'Gold' ? 'bg-yellow-50 text-yellow-700 border-yellow-100' :
-                    'bg-gray-50 text-gray-600 border-gray-100'
-                  }`}>
-                    {investor.tier === 'Diamond' ? '💎 ' : investor.tier === 'Gold' ? '👑 ' : '🥈 '}
-                    {investor.tier} Elite
-                  </span>
-                )}
               </h1>
               <p className="text-gray-500 font-medium text-lg">Your real estate assets are currently performing at peak capacity.</p>
             </header>
@@ -143,8 +147,8 @@ function Overview() {
                 <p className="text-2xl font-black text-orange-600 tracking-tighter mb-1">
                   ₦{calculateInterest().toLocaleString(undefined, { maximumFractionDigits: 0 })}
                 </p>
-                <div className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">
-                  Estimated ROI
+                <div className="text-green-600 text-[10px] font-bold">
+                  +{((calculateInterest() / (investor.amount || 1)) * 100).toFixed(2)}% Total Growth
                 </div>
               </div>
 

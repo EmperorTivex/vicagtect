@@ -45,14 +45,24 @@ function Realties() {
             <p className="text-xl md:text-2xl max-w-3xl mx-auto mb-12 font-medium opacity-90 leading-relaxed">
               With Vicagtect Realties, your daily or monthly contributions grow with up to 30% ROI while being invested in real estate projects you can see and trust.
             </p>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate("/contact")}
-              className="bg-white text-orange-600 px-10 py-5 font-black rounded-full shadow-2xl hover:bg-orange-50 transition-all text-xl"
-            >
-              Start Your Contribution Today
-            </motion.button>
+            <div className="flex flex-col sm:flex-row justify-center gap-6">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate("/contact")}
+                className="bg-white text-orange-600 px-10 py-5 font-black rounded-full shadow-2xl hover:bg-orange-50 transition-all text-xl"
+              >
+                Start Your Contribution Today
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate("/login")}
+                className="bg-orange-800/30 backdrop-blur-md text-white border-2 border-white/50 px-10 py-5 font-black rounded-full shadow-2xl hover:bg-orange-800/50 transition-all text-xl"
+              >
+                Investor Login
+              </motion.button>
+            </div>
           </motion.div>
         </div>
       </section>

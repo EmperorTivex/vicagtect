@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import keys from "../assets/keys.jpg";
 import { motion } from "framer-motion";
 import vision from "../assets/vision.jpg";
@@ -6,6 +7,7 @@ import family from "../assets/family.jpg";
 import handshake from "../assets/handshake.jpg";
 
 const About = () => {
+  const navigate = useNavigate();
   const fadeInUp = {
     initial: { opacity: 0, y: 30 },
     whileInView: { opacity: 1, y: 0 },
@@ -247,14 +249,14 @@ const About = () => {
               Join the Movement
             </h3>
             <p className="text-xl font-medium text-orange-50/90 mb-8 max-w-xl mx-auto leading-relaxed">
-              We call our customers{" "}
-              <span className="font-black text-white underline underline-offset-4 decoration-white/30">
-                Patrons
-              </span>
-              —because you're the reason we exist. Your trust fuels our mission.
+              We call our customers "Patrons" because we're in this together.
+              Ready to find your peace of mind?
             </p>
-            <button className="bg-white text-orange-600 px-10 py-4 rounded-full font-black text-lg hover:bg-orange-50 transition-all hover:scale-105 shadow-xl">
-              Start Your Journey
+            <button
+              onClick={() => navigate("/contact")}
+              className="bg-white text-orange-600 px-10 py-4 rounded-full font-black text-lg hover:bg-orange-50 transition-all shadow-xl"
+            >
+              Start Your Journey Today
             </button>
           </motion.div>
         </div>

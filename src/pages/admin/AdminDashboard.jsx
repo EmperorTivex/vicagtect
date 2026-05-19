@@ -564,31 +564,6 @@ function AdminDashboard() {
                         <option value="24 Months">24 Months (40% ROI)</option>
                       </select>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
-                        Investor Tier (VIP Tag)
-                      </label>
-                      <select
-                        className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 font-bold text-gray-700 transition-all appearance-none"
-                        value={
-                          activeTab === "add"
-                            ? formData.tier
-                            : selectedInvestor?.tier
-                        }
-                        onChange={(e) =>
-                          activeTab === "add"
-                            ? setFormData({ ...formData, tier: e.target.value })
-                            : setSelectedInvestor({
-                                ...selectedInvestor,
-                                tier: e.target.value,
-                              })
-                        }
-                      >
-                        <option value="Silver">Silver Investor</option>
-                        <option value="Gold">Gold VIP</option>
-                        <option value="Diamond">Diamond Elite</option>
-                      </select>
-                    </div>
                     <div className="space-y-2 md:col-span-2">
                       <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
                         Current Status
