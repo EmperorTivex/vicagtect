@@ -40,7 +40,7 @@ function Overview() {
   const calculateInterest = () => {
     if (!investor) return 0;
     const amount = Number(investor.amount || 0);
-    const rate = investor.interestRate || 0.3;
+    const rate = investor.interestRate || 0.11;
     const startDate = investor.date?.seconds
       ? new Date(investor.date.seconds * 1000)
       : new Date();
@@ -51,7 +51,7 @@ function Overview() {
     const daysElapsed = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     // Determine total days based on plan
-    const planMonths = parseInt(investor.plan) || 12;
+    const planMonths = parseInt(investor.plan) || 18;
     const totalDays = planMonths * 30;
 
     // Simple interest calculation: (days elapsed / total days) * total ROI

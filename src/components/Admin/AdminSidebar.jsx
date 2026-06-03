@@ -5,6 +5,7 @@ function AdminSidebar({ isOpen, onClose, activeTab, setActiveTab, onLogout }) {
   const menuItems = [
     { id: "overview", name: "All Investors", icon: "📋" },
     { id: "add", name: "Register New", icon: "➕" },
+    { id: "maintenance", name: "Maintenance", icon: "🛠️" },
   ];
 
   const sidebarContent = (

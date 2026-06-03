@@ -8,6 +8,7 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  writeBatch,
   Timestamp,
   query,
   where,
@@ -19,13 +20,14 @@ import AdminTopbar from "../../components/Admin/AdminTopbar";
 
 function AdminDashboard() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("overview"); // 'overview', 'add', 'edit'
+  const [activeTab, setActiveTab] = useState("overview"); // 'overview', 'add', 'edit', 'maintenance'
   const [investors, setInvestors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ text: "", type: "" });
   const [selectedInvestor, setSelectedInvestor] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [orphanedCount, setOrphanedCount] = useState(0);
   const [paymentData, setPaymentData] = useState({
     amount: "",
     type: "Top-up",
@@ -41,6 +43,21 @@ function AdminDashboard() {
     password: "",
   });
 
+  // Filter & Sort State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState(() => {
+    const saved = localStorage.getItem("adminFilters");
+    return saved
+      ? JSON.parse(saved)
+      : {
+          plans: [], // empty means all
+          statuses: [], // empty means all
+          sortBy: "date", // 'name', 'amount', 'status', 'date'
+          sortOrder: "desc", // 'asc', 'desc'
+        };
+  });
+  const [showFilters, setShowFilters] = useState(false);
+
   // Auth Check
   useEffect(() => {
     const isAdminLoggedIn = localStorage.getItem("isAdminLoggedIn");
@@ -48,7 +65,13 @@ function AdminDashboard() {
       navigate("/admin-login");
     }
     fetchInvestors();
+    checkOrphanedRecords();
   }, [navigate]);
+
+  // Persist Filters
+  useEffect(() => {
+    localStorage.setItem("adminFilters", JSON.stringify(filters));
+  }, [filters]);
 
   const fetchInvestors = async () => {
     setLoading(true);
@@ -64,6 +87,93 @@ function AdminDashboard() {
     } catch (err) {
       console.error(err);
       showFeedback("Failed to fetch investors", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredInvestors = investors
+    .filter((inv) => {
+      const matchesSearch =
+        (inv.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (inv.email || "").toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesPlan =
+        filters.plans.length === 0 || filters.plans.includes(inv.plan);
+      const matchesStatus =
+        filters.statuses.length === 0 || filters.statuses.includes(inv.status);
+      return matchesSearch && matchesPlan && matchesStatus;
+    })
+    .sort((a, b) => {
+      let comparison = 0;
+      switch (filters.sortBy) {
+        case "name":
+          comparison = (a.name || "").localeCompare(b.name || "");
+          break;
+        case "email":
+          comparison = (a.email || "").localeCompare(b.email || "");
+          break;
+        case "amount":
+          comparison = Number(a.amount || 0) - Number(b.amount || 0);
+          break;
+        case "status":
+          comparison = (a.status || "").localeCompare(b.status || "");
+          break;
+        case "date":
+        default:
+          comparison = (a.date?.seconds || 0) - (b.date?.seconds || 0);
+          break;
+      }
+      return filters.sortOrder === "asc" ? comparison : -comparison;
+    });
+
+  const checkOrphanedRecords = async () => {
+    try {
+      // Get all transactions
+      const tSnapshot = await getDocs(collection(db, "transactions"));
+      const iSnapshot = await getDocs(collection(db, "investors"));
+
+      const investorIds = new Set(iSnapshot.docs.map((doc) => doc.id));
+      const orphaned = tSnapshot.docs.filter(
+        (doc) => !investorIds.has(doc.data().investorId),
+      );
+      setOrphanedCount(orphaned.length);
+    } catch (err) {
+      console.error("Cleanup check error:", err);
+    }
+  };
+
+  const runCleanup = async () => {
+    if (
+      !window.confirm(`Delete ${orphanedCount} orphaned transaction records?`)
+    )
+      return;
+
+    try {
+      setLoading(true);
+      const tSnapshot = await getDocs(collection(db, "transactions"));
+      const iSnapshot = await getDocs(collection(db, "investors"));
+
+      const investorIds = new Set(iSnapshot.docs.map((doc) => doc.id));
+      const batch = writeBatch(db);
+      let count = 0;
+
+      tSnapshot.docs.forEach((doc) => {
+        if (!investorIds.has(doc.data().investorId)) {
+          batch.delete(doc.ref);
+          count++;
+        }
+      });
+
+      if (count > 0) {
+        await batch.commit();
+        showFeedback(`Cleaned up ${count} orphaned records`, "success");
+      } else {
+        showFeedback("No orphaned records found", "success");
+      }
+      setOrphanedCount(0);
+    } catch (err) {
+      console.error("Cleanup error:", err);
+      showFeedback("Cleanup failed", "error");
     } finally {
       setLoading(false);
     }
@@ -109,11 +219,11 @@ function AdminDashboard() {
       const user = userCredential.user;
 
       // Calculate Maturity Date (e.g., based on plan)
-      const monthsToAdd = plan.includes("18")
-        ? 18
-        : plan.includes("12")
-          ? 12
-          : 24;
+      const monthsToAdd = plan.includes("60")
+        ? 60
+        : plan.includes("36")
+          ? 36
+          : 18;
       const maturityDate = new Date();
       maturityDate.setMonth(maturityDate.getMonth() + monthsToAdd);
 
@@ -127,7 +237,11 @@ function AdminDashboard() {
         status,
         date: Timestamp.now(),
         maturityDate: Timestamp.fromDate(maturityDate),
-        interestRate: 0.3, // 30% ROI default
+        interestRate: plan.includes("60")
+          ? 0.33
+          : plan.includes("36")
+            ? 0.2
+            : 0.11, // 18 Months: 11%, 36 Months: 20%, 60 Months: 33%
       });
 
       // 3. Create Initial Transaction (The "Opening Deposit")
@@ -216,11 +330,11 @@ function AdminDashboard() {
       const investorRef = doc(db, "investors", selectedInvestor.id);
 
       // Calculate new maturity based on the current plan and the original join date
-      const monthsToAdd = selectedInvestor.plan?.includes("18")
-        ? 18
-        : selectedInvestor.plan?.includes("12")
-          ? 12
-          : 24;
+      const monthsToAdd = selectedInvestor.plan?.includes("60")
+        ? 60
+        : selectedInvestor.plan?.includes("36")
+          ? 36
+          : 18;
 
       // Use the original join date if available, otherwise use now
       const baseDate = selectedInvestor.date?.seconds
@@ -235,11 +349,11 @@ function AdminDashboard() {
         plan: selectedInvestor.plan,
         status: selectedInvestor.status,
         maturityDate: Timestamp.fromDate(newMaturityDate),
-        interestRate: selectedInvestor.plan?.includes("24")
-          ? 0.4
-          : selectedInvestor.plan?.includes("18")
-            ? 0.3
-            : 0.25,
+        interestRate: selectedInvestor.plan?.includes("60")
+          ? 0.33
+          : selectedInvestor.plan?.includes("36")
+            ? 0.2
+            : 0.11,
       };
 
       await updateDoc(investorRef, updateData);
@@ -255,16 +369,39 @@ function AdminDashboard() {
     }
   };
 
-  const handleDelete = async (id, name) => {
+  const handleDelete = async (id, name, uid) => {
     if (
       window.confirm(
-        `Are you sure you want to delete ${name}? This will NOT delete their login credentials.`,
+        `Are you sure you want to delete ${name}? This will permanently remove their profile and all associated transaction records.`,
       )
     ) {
       try {
         setLoading(true);
-        await deleteDoc(doc(db, "investors", id));
-        showFeedback("Investor deleted", "success");
+
+        const batch = writeBatch(db);
+
+        // 1. Delete associated transactions
+        const q = query(
+          collection(db, "transactions"),
+          where("investorId", "==", id),
+        );
+        const transactionDocs = await getDocs(q);
+        transactionDocs.forEach((tDoc) => {
+          batch.delete(tDoc.ref);
+        });
+
+        // 2. Delete the investor document
+        batch.delete(doc(db, "investors", id));
+
+        // 3. Execute batch
+        await batch.commit();
+
+        // Note: Firebase Auth deletion requires Admin SDK (Cloud Functions)
+        // We'll show a message if Auth deletion isn't automated yet
+        showFeedback(
+          "Investor and all records deleted successfully",
+          "success",
+        );
         fetchInvestors();
       } catch (err) {
         console.error(err);
@@ -322,15 +459,196 @@ function AdminDashboard() {
                       Overview of all registered real estate investors.
                     </p>
                   </div>
-                  <div className="bg-white px-6 py-3 rounded-2xl shadow-sm border border-gray-100 w-fit">
-                    <span className="text-gray-400 font-bold uppercase text-xs tracking-widest mr-2">
-                      Count
-                    </span>
-                    <span className="text-2xl font-black text-orange-600">
-                      {investors.length}
-                    </span>
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => setShowFilters(!showFilters)}
+                      className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all ${
+                        showFilters
+                          ? "bg-orange-600 text-white shadow-lg shadow-orange-200"
+                          : "bg-white text-gray-600 border border-gray-100 hover:bg-gray-50"
+                      }`}
+                    >
+                      <span>{showFilters ? "✕" : "🔍"}</span>
+                      <span className="text-sm">
+                        {showFilters ? "Close Filters" : "Filter & Sort"}
+                      </span>
+                    </button>
+                    <div className="bg-white px-6 py-3 rounded-2xl shadow-sm border border-gray-100 w-fit">
+                      <span className="text-gray-400 font-bold uppercase text-xs tracking-widest mr-2">
+                        Count
+                      </span>
+                      <span className="text-2xl font-black text-orange-600">
+                        {filteredInvestors.length}
+                      </span>
+                    </div>
                   </div>
                 </header>
+
+                <AnimatePresence>
+                  {showFilters && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden mb-8"
+                    >
+                      <div className="bg-white rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 border border-gray-100 shadow-xl shadow-gray-200/30">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+                          {/* Search */}
+                          <div className="space-y-3">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                              Search Records
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Name or email..."
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-gray-800 focus:ring-2 focus:ring-orange-500 transition-all text-sm"
+                            />
+                          </div>
+
+                          {/* Plan Filter */}
+                          <div className="space-y-3">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                              Filter by Plan
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                              {["18 Months", "36 Months", "60 Months"].map(
+                                (plan) => (
+                                  <button
+                                    key={plan}
+                                    onClick={() => {
+                                      const newPlans = filters.plans.includes(
+                                        plan,
+                                      )
+                                        ? filters.plans.filter(
+                                            (p) => p !== plan,
+                                          )
+                                        : [...filters.plans, plan];
+                                      setFilters({
+                                        ...filters,
+                                        plans: newPlans,
+                                      });
+                                    }}
+                                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tight transition-all border ${
+                                      filters.plans.includes(plan)
+                                        ? "bg-orange-600 text-white border-orange-600"
+                                        : "bg-gray-50 text-gray-500 border-gray-100 hover:bg-gray-100"
+                                    }`}
+                                  >
+                                    {plan}
+                                  </button>
+                                ),
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Status Filter */}
+                          <div className="space-y-3">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                              Filter by Status
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                              {["Active", "Dormant", "Matured"].map(
+                                (status) => (
+                                  <button
+                                    key={status}
+                                    onClick={() => {
+                                      const newStatuses =
+                                        filters.statuses.includes(status)
+                                          ? filters.statuses.filter(
+                                              (s) => s !== status,
+                                            )
+                                          : [...filters.statuses, status];
+                                      setFilters({
+                                        ...filters,
+                                        statuses: newStatuses,
+                                      });
+                                    }}
+                                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tight transition-all border ${
+                                      filters.statuses.includes(status)
+                                        ? "bg-orange-600 text-white border-orange-600"
+                                        : "bg-gray-50 text-gray-500 border-gray-100 hover:bg-gray-100"
+                                    }`}
+                                  >
+                                    {status}
+                                  </button>
+                                ),
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Sorting */}
+                          <div className="space-y-3">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                              Sort Records
+                            </label>
+                            <div className="flex gap-2">
+                              <select
+                                value={filters.sortBy}
+                                onChange={(e) =>
+                                  setFilters({
+                                    ...filters,
+                                    sortBy: e.target.value,
+                                  })
+                                }
+                                className="flex-1 bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-gray-800 focus:ring-2 focus:ring-orange-500 transition-all text-xs appearance-none"
+                              >
+                                <option value="date">Date Joined</option>
+                                <option value="name">
+                                  Alphabetical (Name)
+                                </option>
+                                <option value="email">
+                                  Alphabetical (Email)
+                                </option>
+                                <option value="amount">
+                                  Investment Amount
+                                </option>
+                                <option value="status">Status</option>
+                              </select>
+                              <button
+                                onClick={() =>
+                                  setFilters({
+                                    ...filters,
+                                    sortOrder:
+                                      filters.sortOrder === "asc"
+                                        ? "desc"
+                                        : "asc",
+                                  })
+                                }
+                                className="bg-gray-50 text-gray-600 px-4 rounded-xl font-bold hover:bg-gray-100 transition-all border border-gray-100"
+                              >
+                                {filters.sortOrder === "asc" ? "↑" : "↓"}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-6 pt-6 border-t border-gray-50 flex justify-between items-center">
+                          <button
+                            onClick={() => {
+                              setFilters({
+                                plans: [],
+                                statuses: [],
+                                sortBy: "date",
+                                sortOrder: "desc",
+                              });
+                              setSearchQuery("");
+                            }}
+                            className="text-[10px] font-black text-orange-600 uppercase tracking-widest hover:text-orange-700"
+                          >
+                            Reset to Default
+                          </button>
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                            Showing {filteredInvestors.length} of{" "}
+                            {investors.length} records
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {loading && investors.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
@@ -363,7 +681,7 @@ function AdminDashboard() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                          {investors.map((inv) => (
+                          {filteredInvestors.map((inv) => (
                             <tr
                               key={inv.id}
                               className="hover:bg-orange-50/30 transition-colors group"
@@ -426,7 +744,7 @@ function AdminDashboard() {
                                   </button>
                                   <button
                                     onClick={() =>
-                                      handleDelete(inv.id, inv.name)
+                                      handleDelete(inv.id, inv.name, inv.uid)
                                     }
                                     className="p-1.5 md:p-2 bg-red-50 text-red-600 rounded-lg md:rounded-xl hover:bg-red-600 hover:text-white transition-all"
                                     title="Delete"
@@ -564,58 +882,158 @@ function AdminDashboard() {
                                 })
                           }
                         >
-                          <option>12 Months</option>
                           <option>18 Months</option>
-                          <option>24 Months</option>
+                          <option>36 Months</option>
+                          <option>60 Months</option>
                         </select>
                       </div>
                     </div>
 
-                    {activeTab === "add" && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                       <div>
                         <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">
-                          System Password
+                          Account Status
                         </label>
-                        <input
-                          type="password"
-                          required
-                          className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 font-bold text-gray-800 focus:ring-2 focus:ring-orange-500 transition-all"
-                          placeholder="Min. 8 characters (letters & numbers)"
-                          value={formData.password}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              password: e.target.value,
-                            })
+                        <select
+                          className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 font-bold text-gray-800 focus:ring-2 focus:ring-orange-500 transition-all appearance-none"
+                          value={
+                            activeTab === "add"
+                              ? formData.status
+                              : selectedInvestor?.status
                           }
-                        />
+                          onChange={(e) =>
+                            activeTab === "add"
+                              ? setFormData({
+                                  ...formData,
+                                  status: e.target.value,
+                                })
+                              : setSelectedInvestor({
+                                  ...selectedInvestor,
+                                  status: e.target.value,
+                                })
+                          }
+                        >
+                          <option>Active</option>
+                          <option>Dormant</option>
+                          <option>Matured</option>
+                        </select>
                       </div>
-                    )}
+                      {activeTab === "add" && (
+                        <div>
+                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">
+                            Initial Password
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 font-bold text-gray-800 focus:ring-2 focus:ring-orange-500 transition-all"
+                            placeholder="SecurePass123"
+                            value={formData.password}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                password: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                      )}
+                    </div>
 
-                    <div className="pt-4 md:pt-6">
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-orange-600 text-white py-4 md:py-5 rounded-2xl font-black text-sm md:text-base uppercase tracking-widest hover:bg-orange-700 transition-all shadow-xl shadow-orange-200 disabled:opacity-50"
-                      >
-                        {loading
-                          ? "Processing..."
-                          : activeTab === "add"
-                            ? "Complete Registration"
-                            : "Update Profile"}
-                      </button>
+                    <div className="flex gap-4 pt-4">
                       <button
                         type="button"
                         onClick={() => {
                           setActiveTab("overview");
                           setSelectedInvestor(null);
                         }}
-                        className="w-full mt-4 text-gray-400 font-bold text-xs uppercase tracking-widest hover:text-gray-600 transition-colors"
+                        className="flex-1 bg-gray-100 text-gray-500 py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-gray-200 transition-all"
                       >
-                        Cancel and Return
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex-[2] bg-orange-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-orange-700 transition-all shadow-xl shadow-orange-200 disabled:opacity-50"
+                      >
+                        {loading
+                          ? "Saving..."
+                          : activeTab === "add"
+                            ? "Confirm Registration"
+                            : "Update Record"}
                       </button>
                     </div>
                   </form>
+                </div>
+              </motion.section>
+            )}
+
+            {activeTab === "maintenance" && (
+              <motion.section
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="max-w-4xl mx-auto"
+              >
+                <header className="mb-12">
+                  <h1 className="text-4xl font-black text-gray-800 tracking-tight mb-2">
+                    System Maintenance
+                  </h1>
+                  <p className="text-gray-500 font-medium">
+                    Audit and clean up orphaned records to maintain data
+                    integrity.
+                  </p>
+                </header>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-xl shadow-gray-200/50">
+                    <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-2xl mb-6">
+                      📊
+                    </div>
+                    <h3 className="text-xl font-black text-gray-800 mb-2">
+                      Orphaned Transactions
+                    </h3>
+                    <p className="text-gray-500 text-sm mb-6">
+                      Transactions whose parent investor profile has been
+                      deleted.
+                    </p>
+                    <div className="flex items-end justify-between">
+                      <div>
+                        <span className="text-4xl font-black text-blue-600">
+                          {orphanedCount}
+                        </span>
+                        <span className="text-gray-400 font-bold ml-2 uppercase text-xs">
+                          Found
+                        </span>
+                      </div>
+                      <button
+                        onClick={runCleanup}
+                        disabled={orphanedCount === 0 || loading}
+                        className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:bg-gray-200 disabled:text-gray-400"
+                      >
+                        Clean Up
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-xl shadow-gray-200/50">
+                    <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-2xl mb-6">
+                      🔐
+                    </div>
+                    <h3 className="text-xl font-black text-gray-800 mb-2">
+                      Auth Credentials
+                    </h3>
+                    <p className="text-gray-500 text-sm mb-6">
+                      Firebase Auth users require a backend service (Cloud
+                      Functions) for secure deletion.
+                    </p>
+                    <div className="p-4 bg-orange-50 rounded-xl border border-orange-100">
+                      <p className="text-xs text-orange-700 font-bold leading-relaxed">
+                        ⚠️ Automatic Auth deletion is not active. Please ensure
+                        a Cloud Function is configured to listen for user
+                        deletion events.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </motion.section>
             )}
